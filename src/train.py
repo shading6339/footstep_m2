@@ -105,10 +105,12 @@ def train_fold(fold_info: dict, dataset: FootstepDataset, cfg: dict,
     val_ds   = dataset.subset(fold_info["val"])
 
     t_cfg = cfg["training"]
+    pin = device.type == "cuda"
+    nw = 0 if device.type in ("mps", "cpu") else 4
     train_loader = DataLoader(train_ds, batch_size=t_cfg["batch_size"],
-                              shuffle=True,  num_workers=4, pin_memory=True)
+                              shuffle=True,  num_workers=nw, pin_memory=pin)
     val_loader   = DataLoader(val_ds,   batch_size=t_cfg["batch_size"],
-                              shuffle=False, num_workers=4, pin_memory=True)
+                              shuffle=False, num_workers=nw, pin_memory=pin)
 
     model = build_model(cfg["model"]["name"], dataset.num_classes).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -174,7 +176,12 @@ def main():
 
     fix_seed(cfg["seed"])
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
     print(f"device: {device}")
     print(f"model : {cfg['model']['name']}")
     print(f"seed  : {cfg['seed']}")

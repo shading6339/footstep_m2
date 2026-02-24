@@ -4,3 +4,5 @@ __pycache__/
 experiments/
 data/splits/
 .DS_Store
+.venv/
+uv.lock
