@@ -108,13 +108,15 @@ def evaluate_run(run_dir: Path, device: torch.device):
         labels, preds = predict(model, val_loader, device)
 
         acc = 100.0 * (labels == preds).mean()
-        f1_w = f1_score(labels, preds, average="weighted")
+        all_labels_range = list(range(dataset.num_classes))
+        f1_w = f1_score(labels, preds, average="weighted", labels=all_labels_range)
         report = classification_report(
             labels, preds,
+            labels=all_labels_range,
             target_names=[f"class{dataset.label_to_class[i]}" for i in range(dataset.num_classes)],
             output_dict=True,
         )
-        cm = confusion_matrix(labels, preds)
+        cm = confusion_matrix(labels, preds, labels=all_labels_range)
 
         # 混同行列を保存
         class_names = [f"c{dataset.label_to_class[i]}" for i in range(dataset.num_classes)]
